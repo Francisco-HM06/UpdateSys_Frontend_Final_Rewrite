@@ -1,0 +1,25 @@
+Place these image files in this folder:
+
+logo.jpg
+salon.jpg
+haircut.jpg
+haircolor.jpg
+rebond.jpg
+brazilian.jpg
+cellophane.jpg
+highlights.jpg
+hairspa.jpg
+manicure.jpg
+pedicure.jpg
+footspa.jpg
+gel.jpg
+softgel.jpg
+ronald.jpg
+sharmaine.jpg
+melody.jpg
+nelly.jpg
+vilma.jpg
+alice.jpg
+proof-nina.jpg
+proof-alyanna.jpg
+proof-hannah.jpg
