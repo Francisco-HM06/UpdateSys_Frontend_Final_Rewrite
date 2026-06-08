@@ -490,6 +490,7 @@ function renderAdminCounts() {
     setText("approvedAppointmentsCount", count("Approved"));
     setText("completedAppointmentsCount", count("Completed"));
     setText("reportCancelled", count("Cancelled"));
+    setText("archivedAppointmentsCount", count("Archived"));
 }
 
 function setText(id, value) {
@@ -523,7 +524,7 @@ function renderAdminAppointments() {
                 <button class="mini-btn approve" onclick="updateAppointmentStatus(${a.id}, 'Approved')">Approve</button>
                 <button class="mini-btn cancel" onclick="updateAppointmentStatus(${a.id}, 'Cancelled')">Cancel</button>
                 <button class="mini-btn complete" onclick="updateAppointmentStatus(${a.id}, 'Completed')">Complete</button>
-                <button class="mini-btn delete" onclick="deleteAppointment(${a.id})">Delete</button>
+                <button class="mini-btn archive" onclick="archiveAppointment(${a.id})">Archive</button>
             </div></td>
         </tr>`).join("");
 }
@@ -584,11 +585,14 @@ function updateAppointmentStatus(id, status) {
     renderReports();
 }
 
-function deleteAppointment(id) {
-    if (!confirm("Delete this appointment record?")) return;
-    saveAppointments(getAppointments().filter(a => a.id !== id));
+function archiveAppointment(id) {
+    if (!confirm("Archive this appointment record?")) return;
+    const appointments = getAppointments();
+    const updated = appointments.map(a => a.id === id ? { ...a, status: "Archived", archived: true } : a);
+    saveAppointments(updated);
     renderAdminCounts();
     renderAdminAppointments();
+    renderRecords();
     renderReports();
 }
 
@@ -642,6 +646,47 @@ function renderRecords() {
     if (paymentRecords) paymentRecords.innerHTML = appointments.map(a => `<tr><td>${escapeHtml(a.customerName)}</td><td>${escapeHtml(a.paymentMethod || "N/A")}</td><td>${escapeHtml(a.referenceNumber || "N/A")}</td><td>${formatCurrency(a.price)}</td><td>${statusBadge(a.status)}</td></tr>`).join("") || `<tr><td colspan="5" class="empty-state">No payment records yet.</td></tr>`;
 }
 
+function renderDashboardCharts(appointments) {
+    renderBarChart("statusChart", [
+        { label: "Pending", value: appointments.filter(a => a.status === "Pending").length },
+        { label: "Approved", value: appointments.filter(a => a.status === "Approved").length },
+        { label: "Completed", value: appointments.filter(a => a.status === "Completed").length },
+        { label: "Cancelled", value: appointments.filter(a => a.status === "Cancelled").length },
+        { label: "Archived", value: appointments.filter(a => a.status === "Archived").length }
+    ]);
+
+    const serviceCounts = {};
+    appointments.forEach(a => {
+        (a.services && a.services.length ? a.services : [a.service]).forEach(service => {
+            serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+        });
+    });
+    const serviceData = Object.entries(serviceCounts)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+    renderBarChart("serviceChart", serviceData);
+
+    renderBarChart("paymentChart", [
+        { label: "Cash", value: appointments.filter(a => a.paymentMethod === "Cash").length },
+        { label: "GCash", value: appointments.filter(a => a.paymentMethod === "GCash").length }
+    ]);
+}
+
+function renderBarChart(containerId, data) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const max = Math.max(...data.map(item => item.value), 1);
+    container.innerHTML = data.map(item => {
+        const width = Math.max((item.value / max) * 100, item.value > 0 ? 8 : 0);
+        return `<div class="chart-row">
+            <div class="chart-label">${escapeHtml(item.label)}</div>
+            <div class="chart-track"><span style="width: ${width}%"></span></div>
+            <div class="chart-value">${item.value}</div>
+        </div>`;
+    }).join("") || `<p class="muted">No data available.</p>`;
+}
+
 function renderReports() {
     const appointments = getAppointments();
     const count = status => appointments.filter(a => a.status === status).length;
@@ -655,10 +700,7 @@ function renderReports() {
     setText("reportRevenue", formatCurrency(revenue));
     setText("paymentSummaryDetails", `Cash: ${appointments.filter(a => a.paymentMethod === "Cash").length} | GCash: ${appointments.filter(a => a.paymentMethod === "GCash").length}`);
 
-    const recent = document.getElementById("recentAppointmentsTable");
-    if (recent) {
-        recent.innerHTML = appointments.slice(0, 5).map(a => `<tr><td>${escapeHtml(a.customerName)}</td><td>${escapeHtml(a.contactNumber)}</td><td>${escapeHtml(a.service)}</td><td>${escapeHtml(a.staff)}</td><td>${escapeHtml(a.date)}<br>${escapeHtml(a.time)}</td><td>${escapeHtml(a.paymentMethod || "N/A")}</td><td>${statusBadge(a.status)}</td></tr>`).join("") || `<tr><td colspan="7" class="empty-state">No recent appointments yet.</td></tr>`;
-    }
+    renderDashboardCharts(appointments);
 
     const completedTable = document.getElementById("completedReportTable");
     if (completedTable) {
