@@ -380,16 +380,6 @@ button {
     border: 1px solid var(--border);
 }
 
-.footer-link {
-    color: #d4a017 !important;
-    font-weight: 800;
-    text-decoration: underline;
-}
-
-.footer-link:hover {
-    color: #8a6500;
-}
-
 .footer {
     padding: 24px 0;
     color: #fff;
@@ -420,6 +410,16 @@ button {
 .footer p,
 .footer a {
     color: #e8e8e8;
+}
+
+.footer-link {
+    color: #d4a017 !important;
+    font-weight: 800;
+    text-decoration: underline;
+}
+
+.footer-link:hover {
+    color: #8a6500;
 }
 
 .booking-layout {
