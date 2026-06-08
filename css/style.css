@@ -380,6 +380,16 @@ button {
     border: 1px solid var(--border);
 }
 
+.footer-link {
+    color: #b8860b;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.footer-link:hover {
+    color: #8a6500;
+}
+
 .footer {
     padding: 24px 0;
     color: #fff;
